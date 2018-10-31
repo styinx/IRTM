@@ -2,9 +2,9 @@ import sys
 import re
 from time import time
 import pickle
+import bisect
 
-
-READ_MAX_LINES = 2000
+READ_MAX_LINES = -1
 EYE_CANCER = True
 
 
@@ -71,16 +71,16 @@ class Cache:
         self.docs = {}
 
     @staticmethod
-    def save(what, name="temp.cached"):
+    def save(what, name="tweets.cached"):
         pickle.dump(what, open(name, "wb"))
 
     @staticmethod
-    def load(name="temp.cached"):
+    def load(name="tweets.cached"):
         return pickle.load(open(name, "rb"))
 
 
 #
-# Represents a document by timestamp, user id and user name.
+# Represents a document. Saves timestamp, user id and user name.
 #
 class Document:
     # set the document properties
@@ -90,13 +90,13 @@ class Document:
         self.user_name = user_name
         self.text = text
 
-    # prints the document
-    def p(self, needles):
+    # Prints the document and highlights given search terms if an argument is given
+    def p(self, needles=""):
         formatted = self.text
 
         if needles != "":
-            form = "\033[1;5;31m"
 
+            form = "\033[1;5;31m"
             if not EYE_CANCER:
                 form = "\033[1;31m"
 
@@ -155,7 +155,6 @@ class Dictionary:
 # Performs a query on the dictionary and returns the documents where matches were found.
 #
 def query(*args):
-
     print("process query: \033[1m", " AND ".join(args), "\033[0m")
 
     # one term -> return the postings list
@@ -196,7 +195,7 @@ def query(*args):
 
 
 #
-# Reads a document and
+# Reads a document and separates it by documents
 #
 def index(name):
     file = open(name, "r")
@@ -208,6 +207,7 @@ def index(name):
 
         args = line.split("\t")
 
+        # read all terms in document and store them normalized in the dictionary
         for term in args[4].split(" "):
             dictionary.add(normalize(term), args[1])
 
@@ -218,37 +218,50 @@ def index(name):
 
 
 if __name__ == "__main__":
-    READ_MAX_LINES = -1
-    cache = Cache()
-
-    # test cases (working examples)
-    # search = "welcome"
-    # search = ["adult", "obese"]
-
+    cache = None
+    dictionary = Dictionary()
+    documents = {}
     search = ["nacht", "schlafen"]
 
+    # read search term from console
     if len(sys.argv) > 2:
-        search = sys.argv[2].split(",")
+        search = [x.lower() for x in sys.argv[2].split(",")]
 
     # read only until specific line (reduces computing time)
     if len(sys.argv) > 3:
         READ_MAX_LINES = int(sys.argv[3])
 
-    # load cached file
+    # remove eye cancer
     if len(sys.argv) > 4:
-        cache = Cache.load(sys.argv[4])
-
-    if len(sys.argv) > 5:
         EYE_CANCER = False
 
-    dictionary = Dictionary()
-    documents = {}
+    # load cached file or process new file
+    if sys.argv[1].split(".")[-1] == "cached":
+        cache = Cache.load(sys.argv[1])
+        dictionary = cache.dict
+        documents = cache.docs
+    else:
+        t = time()
+        print("process file: ", sys.argv[1])
+        print(index(sys.argv[1]), " documents searched")
+        print("processing took ", duration(time() - t), end="\n\n")
 
-    t = time()
-    print("process file: ", sys.argv[1])
-    print(index(sys.argv[1]), " documents searched")
-    print("processing took ", duration(time() - t), end="\n\n")
+    # gets length for each postings list, print top 10 matches
+    # uncomment from here to print the top results:
+    #
+    # lengths = {}
+    # for t in dictionary.terms:
+    #     lengths[t] = len(dictionary.terms[t].documents)
+    #
+    # s = [(k, lengths[k]) for k in sorted(lengths, key=lengths.get, reverse=True)]
+    # i = 0
+    # for v, k in s:
+    #     if i == 10:
+    #         break
+    #     print(k, ": ", v)
+    #     i += 1
 
+    # process a query
     t = time()
     matching_docs = query(*search)
     print("result: ", matching_docs)
@@ -256,6 +269,9 @@ if __name__ == "__main__":
         documents[doc].p(search)
     print("query took ", duration(time() - t), end="\n\n")
 
-    cache.save(cache)
-
-    # python3 tweets.csv nach,schlafen 1200 temp.cache F
+    # cache processed values
+    if cache is None:
+        cache = Cache()
+        cache.dict = dictionary
+        cache.docs = documents
+        Cache.save(cache)
