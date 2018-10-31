@@ -203,7 +203,7 @@ def index(name):
     docs = 0
     for line in file.readlines():
 
-        if docs == READ_MAX_LINES:
+        if READ_MAX_LINES != -1 and docs == READ_MAX_LINES:
             break
 
         args = line.split("\t")
@@ -218,7 +218,7 @@ def index(name):
 
 
 if __name__ == "__main__":
-    READ_MAX_LINES = 100
+    READ_MAX_LINES = -1
     cache = Cache()
 
     # test cases (working examples)
