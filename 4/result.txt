@@ -1,0 +1,35 @@
+most relevant terms:
+    gut:                             *******************
+        cool            (3477)   |   gut (3407) [7.568%]   |   schlecht ( 70) [0.533%]
+
+        super           (2736)   |   gut (2657) [5.902%]   |   schlecht ( 79) [0.602%]
+
+        spiel           (2965)   |   gut (2635) [5.853%]   |   schlecht (330) [2.515%]
+
+        geil            (2056)   |   gut (2025) [4.498%]   |   schlecht ( 31) [0.236%]
+
+        gut             (2069)   |   gut (1941) [4.312%]   |   schlecht (128) [0.975%]
+
+        sehr            ( 982)   |   gut ( 924) [2.053%]   |   schlecht ( 58) [0.442%]
+
+        ist             ( 845)   |   gut ( 679) [1.508%]   |   schlecht (166) [1.265%]
+
+        top             ( 581)   |   gut ( 566) [1.257%]   |   schlecht ( 15) [0.114%]
+
+
+    schlecht:                                                  ***********************
+        nicht           ( 682)   |   gut ( 207) [0.460%]   |   schlecht (475) [3.620%]
+
+        spiel           (2965)   |   gut (2635) [5.853%]   |   schlecht (330) [2.515%]
+        
+        update          ( 382)   |   gut ( 150) [0.333%]   |   schlecht (232) [1.768%]
+        
+        mehr            ( 307)   |   gut (  82) [0.182%]   |   schlecht (225) [1.715%]
+        
+        scheisse        ( 217)   |   gut (  37) [0.082%]   |   schlecht (180) [1.372%]
+        
+        es              ( 725)   |   gut ( 547) [1.215%]   |   schlecht (178) [1.357%]
+        
+        das             ( 685)   |   gut ( 515) [1.144%]   |   schlecht (170) [1.296%]
+        
+        schlecht        ( 229)   |   gut (  61) [0.136%]   |   schlecht (168) [1.280%]

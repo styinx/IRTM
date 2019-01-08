@@ -1,45 +1,65 @@
 import sys
+import re
+
+
+# Normalizes the string by some heuristics
+def normalize(term):
+    #                      Ä     ä     Ö     ö     Ü     ü     ß     _
+    not_allowed_chars = "[^\u00c4\u00e4\u00d6\u00f6\u00dc\u00fc\u00df a-zA-Z]"
+    # chars that occur 3 or more times
+    spam_chars = r'(.)(\1){2,}'
+
+    normalized = re.sub(not_allowed_chars, "", term).lower()
+    normalized = re.sub(spam_chars, r'\1\1', normalized)
+
+    return normalized.replace("ß", "ss").replace("\n", "")
 
 
 # reads csv file and assigns every game the number of good/bad ratings and comments
 def read(file):
-    globals = {"count": 0, "gut": 0, "schlecht": 0}
-    games = {}
+    globals = {"entries": 0, "tokens_gut": 0, "tokens_schlecht": 0, "gut": 0, "schlecht": 0}
+    tokens = {}
 
     handle = open(file, encoding="utf-8")
     for line in handle.readlines():
         cols = line.split("\t")
 
-        name = cols[0]
-        if name not in games:
-            games[name] = {"count": 0, "gut": 0, "schlecht": 0, "comments": []}
+        rating = cols[1]
+        text = normalize(cols[2])
+        words = text.split(" ")
 
-        games[name]["count"] += 1
-        games[name][cols[1]] += 1
-        games[name]["comments"].append(cols[2])
+        words = list(filter(None, words))
 
-        globals["count"] += 1
-        globals[cols[1]] += 1
+        for word in words:
+            if word not in tokens:
+                tokens[word] = {"gut": 1, "schlecht": 1, "p_gut": 0, "p_schlecht": 0}
+            else:
+                tokens[word][rating] += 1
 
-    # calculates the probability of the game within the class
-    for k in games:
-        game = games[k]
-        game["p_c"] = game["count"] / globals["count"]
-        game["p_g"] = game["gut"] / globals["gut"]
-        game["p_b"] = game["schlecht"] / globals["schlecht"]
+        globals["entries"] += 1
+        globals["tokens_" + rating] += len(words)
+        globals[rating] += 1
 
-    return games, globals
+    # calculate probabilities for tokens
+    for k in tokens:
+        token = tokens[k]
+        token["p_gut"] = token["gut"] / globals["tokens_gut"] * 100
+        token["p_schlecht"] = token["schlecht"] / globals["tokens_schlecht"] * 100
+
+    return tokens, globals
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         exit(-1)
 
-    games, globals = read(sys.argv[1])
+    tokens, globals = read(sys.argv[1])
+    sorted_tokens = sorted(tokens, key=lambda x: (tokens[x]['p_gut']))
+
+    for k in sorted_tokens:
+        e = tokens[k]
+        if e["gut"] + e["schlecht"] > 20:
+            f = "{:15s} ({:6d})   |   gut ({:6d}) [{:.3f}%]   |   schlecht ({:6d}) [{:.3f}%]"
+            print(f.format(k, e["gut"] + e["schlecht"], e["gut"], e["p_gut"], e["schlecht"], e["p_schlecht"]), "\n", sep="")
 
     print(globals)
-
-    for k in games:
-        e = games[k]
-        f = "{:20s}: {:10d} | gut: {:10d} | schlecht: {:10d}\n{:32f} | p_g: {:10f} | p_s: {:16f}\n"
-        print(f.format(k, e["count"], e["gut"], e["schlecht"], e["p_g"], e["p_g"], e["p_b"]), "="*80, "\n", sep="")
